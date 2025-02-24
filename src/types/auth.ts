@@ -1,0 +1,1 @@
+export type TwoFactorStatus = "disabled" | "enabled" | "pending" | "email";
