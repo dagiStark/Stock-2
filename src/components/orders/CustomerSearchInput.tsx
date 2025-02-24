@@ -1,14 +1,19 @@
-
 import { ChevronsUpDown } from "lucide-react";
 import { Command, CommandInput } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import CustomerList from "./customer-search/CustomerList";
 import EmptyState from "./customer-search/EmptyState";
 import { useCustomerSearch } from "./customer-search/useCustomerSearch";
 import type { CustomerSearchInputProps } from "./customer-search/types";
 
-const CustomerSearchInput = ({ onCustomerSelect }: CustomerSearchInputProps) => {
+const CustomerSearchInput = ({
+  onCustomerSelect,
+}: CustomerSearchInputProps) => {
   const {
     open,
     setOpen,
@@ -20,6 +25,8 @@ const CustomerSearchInput = ({ onCustomerSelect }: CustomerSearchInputProps) => 
     isLoading,
     handleCreateCustomer,
   } = useCustomerSearch(onCustomerSelect);
+
+  console.log("customers: ", customers);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -39,7 +46,7 @@ const CustomerSearchInput = ({ onCustomerSelect }: CustomerSearchInputProps) => 
           <CommandInput
             placeholder="Search customers..."
             value={searchValue}
-            onValueChange={setSearchValue}
+            onValueChange={(value) => setSearchValue(value)}
             disabled={isLoading}
           />
           <EmptyState
@@ -53,7 +60,7 @@ const CustomerSearchInput = ({ onCustomerSelect }: CustomerSearchInputProps) => 
               selectedValue={value}
               onSelect={(customer) => {
                 setValue(customer.name);
-                setSearchValue('');
+                setSearchValue("");
                 onCustomerSelect(customer);
                 setOpen(false);
               }}

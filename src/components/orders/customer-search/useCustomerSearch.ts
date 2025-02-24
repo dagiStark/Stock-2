@@ -1,10 +1,11 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Customer } from "./types";
 
-export const useCustomerSearch = (onCustomerSelect: (customer: Customer) => void) => {
+export const useCustomerSearch = (
+  onCustomerSelect: (customer: Customer) => void
+) => {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [searchValue, setSearchValue] = useState("");
@@ -22,24 +23,32 @@ export const useCustomerSearch = (onCustomerSelect: (customer: Customer) => void
 
       setIsLoading(true);
       try {
+        const safeSearch = trimmedSearch?.trim() || "";
+
         const { data, error } = await supabase
-          .from('customers')
-          .select('id, name, phone, address, email')
-          .ilike('name', `%${trimmedSearch}%`)
+          .from("customers")
+          .select("id, name, phone, address, email")
+          .ilike("name", `%${safeSearch}%`)
+          .order("name", { ascending: true })
           .limit(5);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error fetching customers:", error.message);
+          return [];
+        }
 
+        console.log("Customers: ", data);
         const customersList = data || [];
-        setCustomers(customersList.map(customer => ({
-          id: customer.id,
-          name: customer.name || '',
-          phone: customer.phone || '',
-          address: customer.address || '',
-          email: customer.email || '',
-        })));
+        // setCustomers(customersList.map(customer => ({
+        //   id: customer.id,
+        //   name: customer.name || '',
+        //   phone: customer.phone || '',
+        //   address: customer.address || '',
+        //   email: customer.email || '',
+        // })));
+        setCustomers(customersList);
       } catch (error) {
-        console.error('Error searching customers:', error);
+        console.error("Error searching customers:", error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -62,24 +71,26 @@ export const useCustomerSearch = (onCustomerSelect: (customer: Customer) => void
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('customers')
-        .insert([{
-          name: trimmedValue,
-          phone: '',
-          address: '',
-        }])
+        .from("customers")
+        .insert([
+          {
+            name: trimmedValue,
+            phone: "",
+            address: "",
+          },
+        ])
         .select()
         .single();
 
       if (error) throw error;
-      if (!data) throw new Error('No data returned after customer creation');
+      if (!data) throw new Error("No data returned after customer creation");
 
       const newCustomer: Customer = {
         id: data.id,
-        name: data.name || '',
-        phone: data.phone || '',
-        address: data.address || '',
-        email: data.email || '',
+        name: data.name || "",
+        phone: data.phone || "",
+        address: data.address || "",
+        email: data.email || "",
       };
 
       toast({
@@ -90,10 +101,10 @@ export const useCustomerSearch = (onCustomerSelect: (customer: Customer) => void
       onCustomerSelect(newCustomer);
       setOpen(false);
       setValue(newCustomer.name);
-      setSearchValue('');
+      setSearchValue("");
       setCustomers([]);
     } catch (error) {
-      console.error('Error creating customer:', error);
+      console.error("Error creating customer:", error);
       toast({
         variant: "destructive",
         title: "Error",

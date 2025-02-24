@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
@@ -12,33 +11,35 @@ const ItemStatistics = () => {
   const frequency_threshold = 10; // Consider an item frequent if it sells 10 units in 30 days
 
   const { data: salesData, isLoading } = useQuery({
-    queryKey: ['itemFrequencyStatus', days_window, frequency_threshold],
+    queryKey: ["itemFrequencyStatus", days_window, frequency_threshold],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .rpc('get_item_frequency_status', { 
-          days_window,
-          frequency_threshold
-        });
-      
+      const { data, error } = await supabase.rpc("get_item_frequency_status", {
+        days_window,
+        frequency_threshold,
+      });
+
       if (error) {
-        console.error('Error fetching frequency status:', error);
-        throw error;
+        console.error("Error fetching frequency status:", error);
+        throw new Error(error.message); // Ensure React Query handles the error correctly
       }
-      return data;
-    }
+      return data || []; // Ensure data is always an array
+    },
   });
 
-  const handleEditItem = (itemId: string) => {
-    navigate('/inventory');
-  };
-
-  const frequentItems = salesData?.filter(item => item.total_quantity > 0)
-    .sort((a, b) => Number(b.average_daily_sales) - Number(a.average_daily_sales))
-    .slice(0, 5) || [];
+  const frequentItems =
+    salesData
+      ?.filter((item) => item.total_quantity > 0)
+      .sort(
+        (a, b) => (b.average_daily_sales ?? 0) - (a.average_daily_sales ?? 0)
+      )
+      .slice(0, 5) || [];
 
   if (isLoading) {
     return <div>Loading sales statistics...</div>;
   }
+  const handleEditItem = (itemId: string) => {
+    navigate("/inventory");
+  };
 
   return (
     <Card className="w-full">
@@ -58,7 +59,7 @@ const ItemStatistics = () => {
               <div
                 key={item.item_id}
                 className={`flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors ${
-                  item.is_frequent ? 'border-green-500/50' : ''
+                  item.is_frequent ? "border-green-500/50" : ""
                 }`}
               >
                 <div>
@@ -77,7 +78,8 @@ const ItemStatistics = () => {
                     </p>
                     {item.last_sold && (
                       <p className="text-sm text-muted-foreground">
-                        Last sold: {new Date(item.last_sold).toLocaleDateString()}
+                        Last sold:{" "}
+                        {new Date(item.last_sold).toLocaleDateString()}
                       </p>
                     )}
                   </div>
@@ -99,4 +101,3 @@ const ItemStatistics = () => {
 };
 
 export default ItemStatistics;
-

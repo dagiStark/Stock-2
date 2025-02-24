@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Order } from "@/types";
 import { useState, useEffect } from "react";
@@ -21,38 +20,49 @@ const RecentActivity = () => {
   useEffect(() => {
     const fetchLowStockItems = async () => {
       // Using raw SQL to properly compare quantity with red_threshold
-      const { data, error } = await supabase
-        .from('items')
-        .select('*')
-        .filter('quantity', 'lte', 'red_threshold')
-        .limit(5);
+      // const { data, error } = await supabase
+      //   .from('items')
+      //   .select('*')
+      //   .filter('quantity', 'lte', 'red_threshold')
+      //   .limit(5);
 
+      const { data, error } = await supabase.from("items").select("*");
       if (error) {
-        console.error('Error fetching low stock items:', error);
+        console.error("Error fetching low stock items:", error);
         return;
       }
 
-      if (data) {
+      const filteredItems = data
+        ?.filter((item) => item.quantity <= item.red_threshold)
+        .slice(0, 5);
+
+      console.log("Filtered Items: ", filteredItems);
+
+      if (filteredItems) {
         // Map the database items to match our InventoryItem type
-        const mappedItems: InventoryItem[] = data.map(item => ({
+        const mappedItems: InventoryItem[] = filteredItems.map((item) => ({
           id: item.id,
           name: item.name,
           quantity: item.quantity,
           price: item.price,
           cost: item.cost_price,
-          status: item.quantity <= item.red_threshold ? 'red' : 
-                 item.quantity <= item.yellow_threshold ? 'yellow' : 'green',
+          status:
+            item.quantity <= item.red_threshold
+              ? "red"
+              : item.quantity <= item.yellow_threshold
+              ? "yellow"
+              : "green",
           image: item.image_url,
           weight: item.weight || 0,
           originalWeight: item.weight || 0,
           // Ensure weight_unit is one of the allowed values, default to 'lb'
-          originalUnit: (item.weight_unit as 'lb' | 'kg' | 'g' | 'oz') || 'lb',
+          originalUnit: (item.weight_unit as "lb" | "kg" | "g" | "oz") || "lb",
           itemsPerPackage: item.items_per_package,
           vendor: item.vendor,
           description: item.description,
           barcode: item.barcode,
           yellowThreshold: item.yellow_threshold,
-          redThreshold: item.red_threshold
+          redThreshold: item.red_threshold,
         }));
         setLowStockItems(mappedItems);
       }
@@ -60,6 +70,8 @@ const RecentActivity = () => {
 
     fetchLowStockItems();
   }, []);
+
+  console.log("Low StockItems: ", lowStockItems);
 
   // Get the 5 most recent orders
   const recentOrders = orders
@@ -97,12 +109,15 @@ const RecentActivity = () => {
                   <div>
                     <h3 className="font-medium">{order.customerName}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(order.date).toLocaleDateString()} - {order.items.length} items
+                      {new Date(order.date).toLocaleDateString()} -{" "}
+                      {order.items.length} items
                     </p>
                   </div>
                   <div className="flex items-center gap-4">
                     <div>
-                      <span className="font-semibold">${order.total.toFixed(2)}</span>
+                      <span className="font-semibold">
+                        ${order.total.toFixed(2)}
+                      </span>
                       <div className="text-sm">
                         <span
                           className={`capitalize ${
@@ -134,7 +149,9 @@ const RecentActivity = () => {
 
       <Card className="w-full">
         <CardHeader className="p-4 md:p-6">
-          <CardTitle className="text-lg md:text-xl">Critical Low Stock Items</CardTitle>
+          <CardTitle className="text-lg md:text-xl">
+            Critical Low Stock Items
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-4 md:p-6">
           {lowStockItems.length === 0 ? (
@@ -159,12 +176,15 @@ const RecentActivity = () => {
                     <div>
                       <h3 className="font-medium">{item.name}</h3>
                       <p className="text-sm text-red-600">
-                        Critical: Only {item.quantity} items left (below threshold of {item.redThreshold})
+                        Critical: Only {item.quantity} items left (below
+                        threshold of {item.redThreshold})
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="font-semibold">${item.price.toFixed(2)}</span>
+                    <span className="font-semibold">
+                      ${item.price.toFixed(2)}
+                    </span>
                     <Button
                       variant="ghost"
                       size="icon"
